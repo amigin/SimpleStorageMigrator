@@ -17,7 +17,7 @@ namespace TableStorageMigrator
             public string Msg { get; set; }
         }
 
-        public static async Task<Error> EqualTo(this TableEntitySdk src, TableEntitySdk dest)
+        public static async Task<Error> EqualTo(this TableEntitySdk src, TableEntitySdk dest, Action<int> onItemAction = null)
         {
             List<Error> errors = new List<Error>();
 
@@ -27,6 +27,7 @@ namespace TableStorageMigrator
             TableContinuationToken destTableContinuationToken = null;
 
             int chunkCounter = 0;
+            int itemCounter = 0;
             do
             {
                 chunkCounter++;
@@ -50,8 +51,10 @@ namespace TableStorageMigrator
                     };
                 }
 
-                for (int i = 0; i < srcResult.Length; i++)
+                for (int i = 0; i < srcResult.Length; i++, itemCounter++)
                 {
+                    onItemAction?.Invoke(itemCounter);
+
                     if (!srcResult[i].EqualTo(destResult[i]))
                     {
                         return new Error

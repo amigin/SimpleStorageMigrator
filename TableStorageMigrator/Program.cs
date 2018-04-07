@@ -52,7 +52,13 @@ namespace TableStorageMigrator
                 if (matchData)
                 {
                     //copyPasteEngine.EntitiesBuffer.MatchEntitiesAsync(destTable).Wait();
-                    var error = srcTable.EqualTo(destTable).Result;
+                    var error = srcTable.EqualTo(destTable, i =>
+                    {
+                        if (i % 1000 == 0)
+                        {
+                            Console.WriteLine($"   {i} items matched...");
+                        }
+                    }).Result;
 
                     if (error != null)
                     {
