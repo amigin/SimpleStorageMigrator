@@ -38,9 +38,17 @@ namespace TableStorageMigrator
                 
                 Console.WriteLine("Matching entities: " + tableToCopy);
 
-                copyPasteEngine.EntitiesBuffer.MatchEntitiesAsync(destTable).Wait();
+                //copyPasteEngine.EntitiesBuffer.MatchEntitiesAsync(destTable).Wait();
+                var matched = srcTable.EqualTo(destTable).Result;
 
-                Console.WriteLine("Done with table: " + tableToCopy);
+                if (matched)
+                    Console.WriteLine("Done with table: " + tableToCopy);
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("Table data does not match!");
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
 
             }
 
