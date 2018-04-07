@@ -1,0 +1,7 @@
+.idea
+.vscode
+*.user
+
+**/bin
+**/obj
+**/app
