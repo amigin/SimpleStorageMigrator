@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Common;
 using Microsoft.WindowsAzure.Storage;
@@ -9,6 +10,46 @@ using MoreLinq;
 
 namespace TableStorageMigrator
 {
+    public static class TableEntitySdkComparator
+    {
+        public static async Task<bool> EqualTo(this TableEntitySdk src, TableEntitySdk dest)
+        {
+            var rangeQuery = new TableQuery<DynamicTableEntity>();
+
+            TableContinuationToken srcTableContinuationToken = null;
+            TableContinuationToken destTableContinuationToken = null;
+
+            do
+            {
+                var srcQuery = src.CloudTable.ExecuteQuerySegmentedAsync(rangeQuery, srcTableContinuationToken);
+                var destQuery = dest.CloudTable.ExecuteQuerySegmentedAsync(rangeQuery, destTableContinuationToken);
+
+                var srcQueryResponse = await srcQuery;
+                srcTableContinuationToken = srcQueryResponse.ContinuationToken;
+                var srcResult = srcQueryResponse.Results.ToArray();
+
+                var destQueryResponse = await destQuery;
+                destTableContinuationToken = destQueryResponse.ContinuationToken;
+                var destResult = destQueryResponse.Results.ToArray();
+
+                if (srcResult.Length != destResult.Length)
+                    return false;
+
+                for (int i = 0; i < srcResult.Length; i++)
+                {
+                    if (!srcResult[i].EqualTo(destResult[i]))
+                        return false;
+                }
+
+            } while (srcTableContinuationToken != null);
+
+            //records left in dest storage
+            if (destTableContinuationToken != null)
+                return false;
+
+            return true;
+        }
+    }
 
     public class TableEntitySdk
     {
@@ -130,12 +171,29 @@ namespace TableStorageMigrator
                 yield return new TableEntitySdk(cloudStorageAccount, tableName);
             }
         }
-
+        
         public static TableEntitySdk GetAzureTable(this string connString, string tableName)
         {
             return new TableEntitySdk(connString, tableName);
         }
 
-    }
+        public static bool EqualTo(this DynamicTableEntity src, DynamicTableEntity dest)
+        {
+            return src.GetHashCodeExt() == dest.GetHashCodeExt();
+        }
 
+        public static int GetHashCodeExt(this DynamicTableEntity entity)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            int hashCode = (entity.PartitionKey, entity.RowKey).GetHashCode();
+
+            foreach (var prop in entity.Properties)
+            {
+                hashCode = hashCode * 31 + prop.Value.PropertyAsObject.GetHashCode();
+            }
+
+            return hashCode;
+        }
+    }
 }
