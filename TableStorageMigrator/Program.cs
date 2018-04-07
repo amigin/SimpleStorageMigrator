@@ -16,7 +16,18 @@ namespace TableStorageMigrator
 
             var tablesFromEnvVariable = Environment.GetEnvironmentVariable("CopyTable");
             if (string.IsNullOrEmpty(tablesFromEnvVariable))
-                throw new Exception("Please specift 'DestConnString' env variable");
+                throw new Exception("Please specift 'CopyTable' env variable");
+
+            var matchDataVal = Environment.GetEnvironmentVariable("MatchData");
+
+            bool matchData = true;
+            if (!string.IsNullOrEmpty(matchDataVal))
+            {
+                var parsed = bool.TryParse(matchDataVal, out matchData);
+                if (!parsed)
+                    throw new Exception("Invalid value for 'MatchData' var. Please set 'true' or 'false'");
+            }
+
 
 
             var tables = tablesFromEnvVariable.Split('|');
@@ -38,18 +49,21 @@ namespace TableStorageMigrator
                 
                 Console.WriteLine("Matching entities: " + tableToCopy);
 
-                //copyPasteEngine.EntitiesBuffer.MatchEntitiesAsync(destTable).Wait();
-                var error = srcTable.EqualTo(destTable).Result;
-
-                if (error != null)
+                if (matchData)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Table data does not match!");
-                    Console.WriteLine(error.Msg);
-                    Console.ForegroundColor = ConsoleColor.Gray;
+                    //copyPasteEngine.EntitiesBuffer.MatchEntitiesAsync(destTable).Wait();
+                    var error = srcTable.EqualTo(destTable).Result;
+
+                    if (error != null)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("Table data does not match!");
+                        Console.WriteLine(error.Msg);
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
+                    else
+                        Console.WriteLine("Done with table: " + tableToCopy);
                 }
-                else
-                    Console.WriteLine("Done with table: " + tableToCopy);
             }
 
             Console.WriteLine("Done....");
