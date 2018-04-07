@@ -9,10 +9,11 @@ namespace TableStorageMigrator
     {
         private readonly TableEntitySdk _srcTable;
         private readonly TableEntitySdk _destTable;
-        private readonly Queue<DynamicTableEntity[]> _queue = new Queue<DynamicTableEntity[]>();
 
         public Task TheTask { get; }
 
+        
+        public readonly TableEntitiesBuffer EntitiesBuffer = new TableEntitiesBuffer();
 
         public CopyPasteEngine(TableEntitySdk srcTable, TableEntitySdk destTable)
         {
@@ -20,7 +21,6 @@ namespace TableStorageMigrator
             _destTable = destTable;
 
             TheTask = ReadWriteTaskAsync();
-
         }
 
         private async Task ReadWriteTaskAsync()
@@ -29,6 +29,7 @@ namespace TableStorageMigrator
             await _srcTable.GetEntitiesByChunkAsync(async chunk =>
             {
 
+                EntitiesBuffer.Add(chunk);
                 await _destTable.InsertAsync(chunk);
                 written += chunk.Length;
                 Console.WriteLine("Written entities : " + written);

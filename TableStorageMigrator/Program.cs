@@ -33,6 +33,12 @@ namespace TableStorageMigrator
                 var copyPasteEngine = new CopyPasteEngine(srcTable, destTable);
 
                 copyPasteEngine.TheTask.Wait();
+                
+                Console.WriteLine("Copied table: " + tableToCopy);    
+                
+                Console.WriteLine("Matching entities: " + tableToCopy);
+
+                copyPasteEngine.EntitiesBuffer.MatchEntitiesAsync(destTable).Wait();
 
                 Console.WriteLine("Done with table: " + tableToCopy);
 
