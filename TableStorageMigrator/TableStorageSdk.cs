@@ -12,15 +12,24 @@ namespace TableStorageMigrator
 {
     public static class TableEntitySdkComparator
     {
-        public static async Task<bool> EqualTo(this TableEntitySdk src, TableEntitySdk dest)
+        public class Error
         {
+            public string Msg { get; set; }
+        }
+
+        public static async Task<Error> EqualTo(this TableEntitySdk src, TableEntitySdk dest)
+        {
+            List<Error> errors = new List<Error>();
+
             var rangeQuery = new TableQuery<DynamicTableEntity>();
 
             TableContinuationToken srcTableContinuationToken = null;
             TableContinuationToken destTableContinuationToken = null;
 
+            int chunkCounter = 0;
             do
             {
+                chunkCounter++;
                 var srcQuery = src.CloudTable.ExecuteQuerySegmentedAsync(rangeQuery, srcTableContinuationToken);
                 var destQuery = dest.CloudTable.ExecuteQuerySegmentedAsync(rangeQuery, destTableContinuationToken);
 
@@ -33,21 +42,41 @@ namespace TableStorageMigrator
                 var destResult = destQueryResponse.Results.ToArray();
 
                 if (srcResult.Length != destResult.Length)
-                    return false;
+                {
+                    return new Error
+                    {
+                        Msg =
+                            $"Amount in chunk {chunkCounter} does not match.{Environment.NewLine}Src table: {srcResult.Length}{Environment.NewLine}Dest table: {destResult.Length}"
+                    };
+                }
 
                 for (int i = 0; i < srcResult.Length; i++)
                 {
                     if (!srcResult[i].EqualTo(destResult[i]))
-                        return false;
+                    {
+                        return new Error
+                        {
+                            Msg =
+                                $"Chunk: {chunkCounter}{Environment.NewLine}" +
+                                $"Item: {i}{Environment.NewLine}" +
+                                $"Src object PartitionKey: {srcResult[i].PartitionKey}{Environment.NewLine}" +
+                                $"Src object RowKey: {srcResult[i].RowKey}{Environment.NewLine}" +
+                                $"Dest object PartitionKey: {destResult[i].PartitionKey}{Environment.NewLine}" +
+                                $"Dest object RowKey: {destResult[i].RowKey}{Environment.NewLine}"
+                        };
+                    }
                 }
 
             } while (srcTableContinuationToken != null);
 
             //records left in dest storage
             if (destTableContinuationToken != null)
-                return false;
+                return new Error
+                {
+                    Msg = "Dest table contains more elements"
+                };
 
-            return true;
+            return null;
         }
     }
 
