@@ -83,7 +83,7 @@ namespace TableStorageMigrator
                     {
 
                         if (result.HttpStatusCode >= 300)
-                            throw new Exception("Can not insert entity: "+result.Result.ToJson());
+                            Console.WriteLine("Something wrong with entity: " + result.Result.ToJson());
 
                     }
 
@@ -130,13 +130,10 @@ namespace TableStorageMigrator
                 yield return new TableEntitySdk(cloudStorageAccount, tableName);
             }
         }
-        
+
         public static TableEntitySdk GetAzureTable(this string connString, string tableName)
         {
-            var cloudStorageAccount = CloudStorageAccount.Parse(connString);
-            var tableClient = cloudStorageAccount.CreateCloudTableClient();
-
-            return new TableEntitySdk(cloudStorageAccount, tableClient.GetTableReference(tableName));
+            return new TableEntitySdk(connString, tableName);
         }
 
     }
