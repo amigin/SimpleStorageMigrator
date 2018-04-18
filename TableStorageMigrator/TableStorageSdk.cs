@@ -88,6 +88,8 @@ namespace TableStorageMigrator
         public CloudStorageAccount CloudStorageAccount { get; private set; }
         public CloudTable CloudTable { get; private set; }
 
+        public string TableName => CloudTable.Name;
+
 
         public int Count { get; private set; }
 
@@ -177,6 +179,7 @@ namespace TableStorageMigrator
 
     public static class TableStorageSdk
     {
+
         public static IEnumerable<CloudTable> GetTables(this CloudStorageAccount cloudStorageAccount)
         {
             var cloudTableClient = cloudStorageAccount.CreateCloudTableClient();
@@ -203,7 +206,7 @@ namespace TableStorageMigrator
                 yield return new TableEntitySdk(cloudStorageAccount, tableName);
             }
         }
-        
+
         public static TableEntitySdk GetAzureTable(this string connString, string tableName)
         {
             return new TableEntitySdk(connString, tableName);

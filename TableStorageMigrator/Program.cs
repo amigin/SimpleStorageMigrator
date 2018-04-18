@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace TableStorageMigrator
 {
@@ -14,13 +15,11 @@ namespace TableStorageMigrator
             if (string.IsNullOrEmpty(destConnString))
                 throw new Exception("Please specift 'DestConnString' env variable");
 
-            var tablesFromEnvVariable = Environment.GetEnvironmentVariable("CopyTable");
-            if (string.IsNullOrEmpty(tablesFromEnvVariable))
-                throw new Exception("Please specift 'CopyTable' env variable");
+
 
             var matchDataVal = Environment.GetEnvironmentVariable("MatchData");
 
-            bool matchData = true;
+            var matchData = true;
             if (!string.IsNullOrEmpty(matchDataVal))
             {
                 var parsed = bool.TryParse(matchDataVal, out matchData);
@@ -30,24 +29,23 @@ namespace TableStorageMigrator
 
 
 
-            var tables = tablesFromEnvVariable.Split('|');
 
 
-            foreach (var tableToCopy in tables)
+
+            foreach (var srcTable in GetSrcTables(srcConnString))
             {
-                Console.WriteLine("Copying table: " + tableToCopy);
+                Console.WriteLine("Copying table: " + srcTable.CloudTable);
 
 
-                var srcTable = srcConnString.GetAzureTable(tableToCopy);
-                var destTable = destConnString.GetAzureTable(tableToCopy);
+                var destTable = destConnString.GetAzureTable(srcTable.TableName);
 
                 var copyPasteEngine = new CopyPasteEngine(srcTable, destTable);
 
                 copyPasteEngine.TheTask.Wait();
-                
-                Console.WriteLine("Copied table: " + tableToCopy);    
-                
-                Console.WriteLine("Matching entities: " + tableToCopy);
+
+                Console.WriteLine("Copied table: " + srcTable.TableName);
+
+                Console.WriteLine("Matching entities: " + srcTable.TableName);
 
                 if (matchData)
                 {
@@ -68,12 +66,37 @@ namespace TableStorageMigrator
                         Console.ForegroundColor = ConsoleColor.Gray;
                     }
                     else
-                        Console.WriteLine("Done with table: " + tableToCopy);
+                        Console.WriteLine("Done with table: " + srcTable.TableName);
                 }
             }
 
             Console.WriteLine("Done....");
             Console.ReadLine();
         }
+
+        private static IEnumerable<TableEntitySdk> GetSrcTables(string srcConnString)
+        {
+            var tablesFromEnvVariable = Environment.GetEnvironmentVariable("CopyTable");
+            if (string.IsNullOrEmpty(tablesFromEnvVariable))
+                throw new Exception("Please specift 'CopyTable' env variable");
+
+            if (tablesFromEnvVariable == "*")
+                return TableStorageSdk.GetTables(srcConnString);
+
+
+            var result = new List<TableEntitySdk>();
+
+            foreach (var tableName in tablesFromEnvVariable.Split('|'))
+            {
+                result.Add(TableStorageSdk.GetAzureTable(srcConnString, tableName));
+            }
+
+            return result;
+
+        }
+
     }
+
+
+
 }
