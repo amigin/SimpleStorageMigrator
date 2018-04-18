@@ -80,7 +80,7 @@ namespace TableStorageMigrator
             if (string.IsNullOrEmpty(tablesFromEnvVariable))
                 throw new Exception("Please specift 'CopyTable' env variable");
 
-            if (tablesFromEnvVariable == "*")
+            if (tablesFromEnvVariable.Contains("*"))
             {
                 Console.WriteLine("Copying all tables");
                 return TableStorageSdk.GetTables(srcConnString);
