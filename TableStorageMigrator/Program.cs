@@ -81,7 +81,10 @@ namespace TableStorageMigrator
                 throw new Exception("Please specift 'CopyTable' env variable");
 
             if (tablesFromEnvVariable == "*")
+            {
+                Console.WriteLine("Copying all tables");
                 return TableStorageSdk.GetTables(srcConnString);
+            }
 
 
             var result = new List<TableEntitySdk>();
