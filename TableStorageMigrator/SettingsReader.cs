@@ -45,9 +45,6 @@ namespace TableStorageMigrator
 
             return matchData;
         }
-
-
     }
-}
 
 }
