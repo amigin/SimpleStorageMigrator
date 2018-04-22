@@ -36,12 +36,12 @@ namespace TableStorageMigrator
                             buffer.Add(entity.PartitionKey, new Dictionary<string, DynamicTableEntity>());
                         buffer[entity.PartitionKey].Add(entity.RowKey, entity);
 
-                        srcLoadedCount += chunk.Length;
-
-                        Console.Write("Loaded entities: " + srcLoadedCount);
-
                         Console.CursorLeft = 0;
                     }
+                    
+                    srcLoadedCount += chunk.Length;
+
+                    Console.Write("Loaded entities: " + srcLoadedCount);
 
                     return Task.FromResult(0);
 
