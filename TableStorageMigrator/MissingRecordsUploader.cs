@@ -47,7 +47,7 @@ namespace TableStorageMigrator
 
                 }).Wait();
                 
-                Console.WriteLine("");
+                Console.WriteLine("Loaded Source Table"+srcTable.CloudTable.Name);
                 Console.WriteLine("");
 
                 var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
@@ -83,9 +83,14 @@ namespace TableStorageMigrator
 
                 }).Wait();
 
+                Console.WriteLine("Loaded Dest Table: "+destTable.CloudTable.Name);
 
 
                 var inserted = 0;
+                
+                
+                if (buffer.Count ==0)
+                    Console.WriteLine("Nothing to sync for table: "+destTable.CloudTable.Name);
                 
 
                 foreach (var kvp in buffer)
