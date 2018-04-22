@@ -17,7 +17,7 @@ namespace TableStorageMigrator
             public string Msg { get; set; }
         }
 
-        public static async Task<Error> EqualTo(this TableEntitySdk src, TableEntitySdk dest, Action<int> onItemAction = null)
+        public static async Task<Error> EqualToAsync(this TableEntitySdk src, TableEntitySdk dest, Action<int> onItemAction = null)
         {
             List<Error> errors = new List<Error>();
 

@@ -12,7 +12,7 @@ namespace TableStorageMigrator
     public static class MissingRecordsUploader
     {
 
-        public static async Task UploadMissingRecords(this SettingsModel settings)
+        public static async Task UploadMissingRecordsAsync(this SettingsModel settings)
         {
 
             
