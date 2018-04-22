@@ -13,7 +13,12 @@ namespace TableStorageMigrator
             if (settings.Mode == SettingsModel.UploadNonExistMode)
                 settings.UploadMissingRecords();
             else
+            if (settings.Mode == SettingsModel.SimpleCopyMode)            
                 settings.RunSimpleCopyPaste();
+            else
+            {
+                Console.WriteLine("Unknown mode: '"+settings.Mode+"'");
+            }
 
             Console.WriteLine("Done....");
             Console.ReadLine();
