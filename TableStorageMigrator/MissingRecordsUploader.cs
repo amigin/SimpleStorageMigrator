@@ -47,7 +47,7 @@ namespace TableStorageMigrator
 
                 });
                 Console.WriteLine("");
-                Console.WriteLine("Loaded Source Table"+srcTable.CloudTable.Name);
+                Console.WriteLine("Loaded Source Table: "+srcTable.CloudTable.Name);
 
                 var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
 
@@ -64,18 +64,21 @@ namespace TableStorageMigrator
                         var partition = buffer[entity.PartitionKey];
 
                         if (partition.ContainsKey(entity.RowKey))
+                        {
                             partition.Remove(entity.RowKey);
+                            removedDest++;
+                        }
 
                         if (partition.Count == 0)
                             buffer.Remove(entity.PartitionKey);
 
-                        removedDest++;
+
 
                     }
 
                     loadedDest += chunk.Length;
 
-                    Console.Write($"Loaded {loadedDest} at dest table. Removed: " + removedDest+"        ");
+                    Console.Write($"Loaded {loadedDest} at dest table. Removed from cache: " + removedDest+"        ");
                     Console.CursorLeft = 0;                    
 
                     return Task.FromResult(0);
@@ -87,7 +90,6 @@ namespace TableStorageMigrator
 
 
                 var inserted = 0;
-                
                 
                 if (buffer.Count ==0)
                     Console.WriteLine("Nothing to sync for table: "+destTable.CloudTable.Name);
