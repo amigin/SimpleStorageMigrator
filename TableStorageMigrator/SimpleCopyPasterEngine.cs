@@ -8,6 +8,8 @@ namespace TableStorageMigrator
 
         public static void RunSimpleCopyPaste(this SettingsModel settings)
         {
+            
+            Console.WriteLine("Simple copy/past mode....");
 
             foreach (var srcTable in settings.GetSrcTables())
             {

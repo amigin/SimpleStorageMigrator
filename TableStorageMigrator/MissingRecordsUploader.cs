@@ -15,6 +15,10 @@ namespace TableStorageMigrator
         public static void UploadMissingRecords(this SettingsModel settings)
         {
 
+            
+            Console.WriteLine("Uploading missing records mode....");
+            
+            
             foreach (var srcTable in settings.GetSrcTables())
             {
                 Console.WriteLine("Loading table: " + srcTable.CloudTable);
