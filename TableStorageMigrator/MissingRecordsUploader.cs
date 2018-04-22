@@ -77,7 +77,11 @@ namespace TableStorageMigrator
                     Console.WriteLine("Syncinc Partition: " + kvp.Key);
 
                     foreach (var chunk in kvp.Value.Values.Batch(1000))
-                        destTable.InsertAsync(chunk.ToArray()).Wait();
+                    {
+                        var chunkToUpload = chunk.ToArray();
+                        destTable.InsertAsync(chunkToUpload).Wait();
+                        Console.WriteLine("Inserted missing records: " + chunkToUpload.Length);
+                    }
 
                 }
             }
