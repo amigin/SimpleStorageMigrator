@@ -25,6 +25,8 @@ namespace TableStorageMigrator
 
                 var buffer = new Dictionary<string, Dictionary<string, DynamicTableEntity>>();
 
+                var srcLoadedCount = 0;
+
                 srcTable.GetEntitiesByChunkAsync(chunk =>
                 {
 
@@ -34,19 +36,26 @@ namespace TableStorageMigrator
                             buffer.Add(entity.PartitionKey, new Dictionary<string, DynamicTableEntity>());
                         buffer[entity.PartitionKey].Add(entity.RowKey, entity);
 
-                        Console.WriteLine("Loaded entities: " + chunk.Length);
+                        srcLoadedCount += chunk.Length;
+
+                        Console.WriteLine("Loaded entities: " + srcLoadedCount);
+
+                        Console.CursorLeft = 0;
                     }
 
                     return Task.FromResult(0);
 
                 }).Wait();
+                
+                Console.WriteLine("");
+                Console.WriteLine("");
 
                 var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
 
+                var loadedDest = 0;
+                var removedDest = 0;
                 destTable.GetEntitiesByChunkAsync(chunk =>
                 {
-
-                    var removed = 0;
 
                     foreach (var entity in chunk)
                     {
@@ -61,16 +70,23 @@ namespace TableStorageMigrator
                         if (partition.Count == 0)
                             buffer.Remove(entity.PartitionKey);
 
-                        removed--;
+                        removedDest++;
 
                     }
 
-                    Console.WriteLine($"Loaded {chunk.Length} at dest table. Removed: " + removed);
+                    loadedDest += chunk.Length;
+
+                    Console.WriteLine($"Loaded {loadedDest} at dest table. Removed: " + removedDest+"        ");
+                    Console.CursorLeft = 0;                    
 
                     return Task.FromResult(0);
 
                 }).Wait();
 
+
+
+                var inserted = 0;
+                
 
                 foreach (var kvp in buffer)
                 {
@@ -80,7 +96,8 @@ namespace TableStorageMigrator
                     {
                         var chunkToUpload = chunk.ToArray();
                         destTable.InsertAsync(chunkToUpload).Wait();
-                        Console.WriteLine("Inserted missing records: " + chunkToUpload.Length);
+                        inserted += chunkToUpload.Length;
+                        Console.WriteLine("Inserted missing records: " + inserted);
                     }
 
                 }
