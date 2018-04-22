@@ -1,0 +1,4 @@
+git pull
+cd TableStorageMigrator
+rm -rf ./app/*
+dotnet publish -o app -c release
