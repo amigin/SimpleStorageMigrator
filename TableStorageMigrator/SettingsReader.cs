@@ -41,7 +41,7 @@ namespace TableStorageMigrator
                 settingsFileName = Environment.CurrentDirectory + "/settings.json";
 
 
-            if (File.Exists(settingsFileName))
+            if (!File.Exists(settingsFileName))
                 throw new Exception(settingsFileName + " does not exist");
 
 
