@@ -12,10 +12,10 @@ namespace TableStorageMigrator
     public static class MissingRecordsUploader
     {
 
-        public static void Upload(string srcConnString, string destConnString)
+        public static void UploadMissingRecords(this SettingsModel settings)
         {
 
-            foreach (var srcTable in SettingsReader.GetSrcTables(srcConnString))
+            foreach (var srcTable in settings.GetSrcTables())
             {
                 Console.WriteLine("Loading table: " + srcTable.CloudTable);
 
@@ -37,7 +37,7 @@ namespace TableStorageMigrator
 
                 }).Wait();
 
-                var destTable = destConnString.GetAzureTable(srcTable.TableName);
+                var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
 
                 destTable.GetEntitiesByChunkAsync(chunk =>
                 {

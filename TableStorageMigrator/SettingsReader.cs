@@ -1,50 +1,80 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace TableStorageMigrator
 {
 
+
+    public class SettingsModel
+    {
+
+        public string SrcConnString { get; set; }
+
+        public string DestConnString { get; set; }
+
+
+        //Null - all tables
+        public string[] TablesToCopy { get; set; }
+
+
+        public const string SimpleCopyMode = "Copy";
+        public const string UploadNonExistMode = "UpoloadNonExist";
+
+        public string Mode { get; set; }
+        
+        public bool Verify { get; set; }
+
+
+    }
+
+
     public static class SettingsReader
     {
-        public static IEnumerable<TableEntitySdk> GetSrcTables(string srcConnString)
-        {
-            var tablesFromEnvVariable = Environment.GetEnvironmentVariable("CopyTable");
-            if (string.IsNullOrEmpty(tablesFromEnvVariable))
-                throw new Exception("Please specift 'CopyTable' env variable");
 
-            if (tablesFromEnvVariable.Contains("*"))
+
+        public static SettingsModel GetSettings()
+        {
+            var settingsFileName = Environment.GetEnvironmentVariable("TableStorageMigratorSettingsFile");
+
+            if (string.IsNullOrEmpty(settingsFileName))
+                settingsFileName = Environment.CurrentDirectory + "/settings.json";
+
+
+            if (File.Exists(settingsFileName))
+                throw new Exception(settingsFileName + " does not exist");
+
+
+            var json = File.ReadAllText(settingsFileName);
+
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<SettingsModel>(json);
+
+        }
+
+
+
+        public static IEnumerable<TableEntitySdk> GetSrcTables(this SettingsModel settings)
+        {
+
+
+            if (settings.TablesToCopy == null)
             {
                 Console.WriteLine("Copying all tables");
-                return TableStorageSdk.GetTables(srcConnString);
+                return settings.SrcConnString.GetTables();
             }
 
 
             var result = new List<TableEntitySdk>();
 
-            foreach (var tableName in tablesFromEnvVariable.Split('|'))
+            foreach (var tableName in settings.TablesToCopy)
             {
-                result.Add(TableStorageSdk.GetAzureTable(srcConnString, tableName));
+                result.Add(settings.SrcConnString.GetAzureTable(tableName));
             }
 
             return result;
 
         }
 
-
-        public static bool VerifyTables()
-        {
-            var matchDataVal = Environment.GetEnvironmentVariable("MatchData");
-
-            if (string.IsNullOrEmpty(matchDataVal))
-                return true;
-
-
-            var parsed = bool.TryParse(matchDataVal, out var matchData);
-            if (!parsed)
-                return true;
-
-            return matchData;
-        }
     }
 
 }

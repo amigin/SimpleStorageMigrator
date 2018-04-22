@@ -6,14 +6,14 @@ namespace TableStorageMigrator
     public static class SimpleCopyPasteEngine
     {
 
-        public static void CopyPaste(string srcConnString, string destConnString, bool verifyTables)
+        public static void RunSimpleCopyPaste(this SettingsModel settings)
         {
 
-            foreach (var srcTable in SettingsReader.GetSrcTables(srcConnString))
+            foreach (var srcTable in settings.GetSrcTables())
             {
                 Console.WriteLine("Copying table: " + srcTable.CloudTable);
 
-                var destTable = destConnString.GetAzureTable(srcTable.TableName);
+                var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
 
                 var copyPasteEngine = new CopyPasteEngine(srcTable, destTable);
 
@@ -23,7 +23,7 @@ namespace TableStorageMigrator
 
                 Console.WriteLine("Matching entities: " + srcTable.TableName);
 
-                if (verifyTables)
+                if (settings.Verify)
                     srcTable.Verify(destTable);
 
             }
