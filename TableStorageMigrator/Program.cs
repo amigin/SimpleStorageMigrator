@@ -11,7 +11,7 @@ namespace TableStorageMigrator
             var settings = SettingsReader.GetSettings();
 
             if (settings.Mode == SettingsModel.UploadNonExistMode)
-                settings.UploadMissingRecords();
+                settings.UploadMissingRecords().Wait();
             else
             if (settings.Mode == SettingsModel.SimpleCopyMode)            
                 settings.RunSimpleCopyPaste();

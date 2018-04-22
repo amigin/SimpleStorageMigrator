@@ -12,7 +12,7 @@ namespace TableStorageMigrator
     public static class MissingRecordsUploader
     {
 
-        public static void UploadMissingRecords(this SettingsModel settings)
+        public static async Task UploadMissingRecords(this SettingsModel settings)
         {
 
             
@@ -27,7 +27,7 @@ namespace TableStorageMigrator
 
                 var srcLoadedCount = 0;
 
-                srcTable.GetEntitiesByChunkAsync(chunk =>
+                await srcTable.GetEntitiesByChunkAsync(chunk =>
                 {
 
                     foreach (var entity in chunk)
@@ -45,16 +45,15 @@ namespace TableStorageMigrator
 
                     return Task.FromResult(0);
 
-                }).Wait();
-                
-                Console.WriteLine("Loaded Source Table"+srcTable.CloudTable.Name);
+                });
                 Console.WriteLine("");
+                Console.WriteLine("Loaded Source Table"+srcTable.CloudTable.Name);
 
                 var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
 
                 var loadedDest = 0;
                 var removedDest = 0;
-                destTable.GetEntitiesByChunkAsync(chunk =>
+                await destTable.GetEntitiesByChunkAsync(chunk =>
                 {
 
                     foreach (var entity in chunk)
@@ -81,8 +80,9 @@ namespace TableStorageMigrator
 
                     return Task.FromResult(0);
 
-                }).Wait();
+                });
 
+                Console.WriteLine("");
                 Console.WriteLine("Loaded Dest Table: "+destTable.CloudTable.Name);
 
 
@@ -103,7 +103,7 @@ namespace TableStorageMigrator
                     foreach (var chunk in kvp.Value.Values.Batch(1000))
                     {
                         var chunkToUpload = chunk.ToArray();
-                        destTable.InsertAsync(chunkToUpload).Wait();
+                        await destTable.InsertAsync(chunkToUpload);
                         inserted += chunkToUpload.Length;
                         Console.Write("Inserted missing records: " + inserted);
                         Console.CursorLeft = 0;                        
