@@ -21,6 +21,7 @@ namespace TableStorageMigrator
             
             foreach (var srcTable in settings.GetSrcTables())
             {
+                Console.WriteLine("");
                 Console.WriteLine("Loading table: " + srcTable.CloudTable);
 
 
@@ -46,6 +47,7 @@ namespace TableStorageMigrator
                     Console.CursorLeft = 0;  
                 });
 
+                Console.WriteLine();
 
                 var srcBuffer = await srcLoadBufferTask;
                 var destBuffer = await destLoadBufferTask;
