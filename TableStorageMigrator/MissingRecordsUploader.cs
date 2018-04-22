@@ -23,79 +23,43 @@ namespace TableStorageMigrator
             {
                 Console.WriteLine("Loading table: " + srcTable.CloudTable);
 
-                var buffer = new Dictionary<string, Dictionary<string, DynamicTableEntity>>();
 
                 var srcLoadedCount = 0;
 
-                await srcTable.GetEntitiesByChunkAsync(chunk =>
-                {
+                var destLoadedCount = 0;
 
-                    foreach (var entity in chunk)
-                    {
-                        if (!buffer.ContainsKey(entity.PartitionKey))
-                            buffer.Add(entity.PartitionKey, new Dictionary<string, DynamicTableEntity>());
-                        buffer[entity.PartitionKey].Add(entity.RowKey, entity);
 
-                        Console.CursorLeft = 0;
-                    }
-                    
-                    srcLoadedCount += chunk.Length;
 
-                    Console.Write("Loaded entities: " + srcLoadedCount);
-
-                    return Task.FromResult(0);
-
+                var srcLoadBufferTask = srcTable.LoadDataToCache(c =>
+                {                    
+                    srcLoadedCount = c;
+                    Console.Write($"Src Loaded: {srcLoadedCount}; Dest Loaded: {destLoadedCount}");
+                    Console.CursorLeft = 0;  
                 });
-                Console.WriteLine("");
-                Console.WriteLine("Loaded Source Table: "+srcTable.CloudTable.Name);
-
+                
                 var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
-
-                var loadedDest = 0;
-                var removedDest = 0;
-                await destTable.GetEntitiesByChunkAsync(chunk =>
+                var destLoadBufferTask = destTable.LoadDataToCache(c =>
                 {
-
-                    foreach (var entity in chunk)
-                    {
-                        if (!buffer.ContainsKey(entity.PartitionKey))
-                            continue;
-
-                        var partition = buffer[entity.PartitionKey];
-
-                        if (partition.ContainsKey(entity.RowKey))
-                        {
-                            partition.Remove(entity.RowKey);
-                            removedDest++;
-                        }
-
-                        if (partition.Count == 0)
-                            buffer.Remove(entity.PartitionKey);
-
-
-
-                    }
-
-                    loadedDest += chunk.Length;
-
-                    Console.Write($"Loaded {loadedDest} at dest table. Removed from cache: " + removedDest+"        ");
-                    Console.CursorLeft = 0;                    
-
-                    return Task.FromResult(0);
-
+                    
+                    destLoadedCount = c;
+                    Console.Write($"Src Loaded: {srcLoadedCount}; Dest Loaded: {destLoadedCount}"); 
+                    Console.CursorLeft = 0;  
                 });
 
-                Console.WriteLine("");
-                Console.WriteLine("Loaded Dest Table: "+destTable.CloudTable.Name);
+
+                var srcBuffer = await srcLoadBufferTask;
+                var destBuffer = await destLoadBufferTask;
 
 
+                CleanEntitiesFromSource(srcBuffer, destBuffer);
+                
                 var inserted = 0;
                 
-                if (buffer.Count ==0)
+                if (srcBuffer.Count ==0)
                     Console.WriteLine("Nothing to sync for table: "+destTable.CloudTable.Name);
                 
 
-                foreach (var kvp in buffer)
+                foreach (var kvp in srcBuffer)
                 {
                     Console.WriteLine("");
                     Console.WriteLine("");
@@ -115,6 +79,57 @@ namespace TableStorageMigrator
             }
         }
 
+
+        private static async Task<Dictionary<string, Dictionary<string, DynamicTableEntity>>> LoadDataToCache(
+            this TableEntitySdk table, Action<int> loadedCallback)
+        {
+            var buffer = new Dictionary<string, Dictionary<string, DynamicTableEntity>>();
+
+            var loaded = 0;
+
+            await table.GetEntitiesByChunkAsync(chunk =>
+            {
+
+                foreach (var entity in chunk)
+                {
+                    if (!buffer.ContainsKey(entity.PartitionKey))
+                        buffer.Add(entity.PartitionKey, new Dictionary<string, DynamicTableEntity>());
+                    buffer[entity.PartitionKey].Add(entity.RowKey, entity);
+
+                    Console.CursorLeft = 0;
+                }
+
+                loaded += chunk.Length;
+
+                loadedCallback(loaded);
+
+                return Task.FromResult(0);
+
+            });
+
+            return buffer;
+
+        }
+
+
+        private static void CleanEntitiesFromSource(Dictionary<string, Dictionary<string, DynamicTableEntity>> src, Dictionary<string, Dictionary<string, DynamicTableEntity>> dest)
+        {
+
+            foreach (var destRow in dest)
+            foreach (var destEntity in destRow.Value.Values)
+            {
+                if (!src.ContainsKey(destEntity.PartitionKey)) continue;
+
+                if (src[destEntity.PartitionKey].ContainsKey(destEntity.RowKey))
+                    src[destEntity.PartitionKey].Remove(destEntity.RowKey);
+
+                if (src[destEntity.PartitionKey].Count == 0)
+                    src.Remove(destEntity.PartitionKey);
+
+            }
+
+        }
+        
     }
 
 }
