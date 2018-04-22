@@ -38,7 +38,7 @@ namespace TableStorageMigrator
 
                         srcLoadedCount += chunk.Length;
 
-                        Console.WriteLine("Loaded entities: " + srcLoadedCount);
+                        Console.Write("Loaded entities: " + srcLoadedCount);
 
                         Console.CursorLeft = 0;
                     }
@@ -76,7 +76,7 @@ namespace TableStorageMigrator
 
                     loadedDest += chunk.Length;
 
-                    Console.WriteLine($"Loaded {loadedDest} at dest table. Removed: " + removedDest+"        ");
+                    Console.Write($"Loaded {loadedDest} at dest table. Removed: " + removedDest+"        ");
                     Console.CursorLeft = 0;                    
 
                     return Task.FromResult(0);
@@ -90,6 +90,9 @@ namespace TableStorageMigrator
 
                 foreach (var kvp in buffer)
                 {
+                    Console.WriteLine("");
+                    Console.WriteLine("");
+                    
                     Console.WriteLine("Syncinc Partition: " + kvp.Key);
 
                     foreach (var chunk in kvp.Value.Values.Batch(1000))
@@ -97,7 +100,8 @@ namespace TableStorageMigrator
                         var chunkToUpload = chunk.ToArray();
                         destTable.InsertAsync(chunkToUpload).Wait();
                         inserted += chunkToUpload.Length;
-                        Console.WriteLine("Inserted missing records: " + inserted);
+                        Console.Write("Inserted missing records: " + inserted);
+                        Console.CursorLeft = 0;                        
                     }
 
                 }
