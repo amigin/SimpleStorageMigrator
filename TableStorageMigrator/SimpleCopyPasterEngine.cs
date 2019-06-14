@@ -3,13 +3,10 @@ using System.Threading.Tasks;
 
 namespace TableStorageMigrator
 {
-
     public static class SimpleCopyPasteEngine
     {
-
         public static async Task RunSimpleCopyPasteAsync(this SettingsModel settings)
         {
-            
             Console.WriteLine("Simple copy/past mode....");
 
             foreach (var srcTable in settings.GetSrcTables())
@@ -18,7 +15,7 @@ namespace TableStorageMigrator
 
                 var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
 
-                var copyPasteEngine = new CopyPasteEngine(srcTable, destTable);
+                var copyPasteEngine = new CopyPasteEngine(srcTable, destTable, settings.SkipBuffer);
 
                 await copyPasteEngine.TheTask;
 
@@ -28,11 +25,7 @@ namespace TableStorageMigrator
 
                 if (settings.Verify)
                    await srcTable.VerifyAsync(destTable);
-
             }
         }
-
-
     }
-
 }
