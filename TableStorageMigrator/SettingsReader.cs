@@ -22,10 +22,10 @@ namespace TableStorageMigrator
         public const string UploadNonExistMode = "UpoloadNonExist";
 
         public string Mode { get; set; }
-        
+
         public bool Verify { get; set; }
 
-
+        public bool SkipBuffer { get; set; }
     }
 
 
