@@ -8,12 +8,17 @@ namespace TableStorageMigrator
         public static async Task RunSimpleCopyPasteAsync(this SettingsModel settings)
         {
             Console.WriteLine("Simple copy/past mode....");
+            var date = DateTime.UtcNow;
 
             foreach (var srcTable in settings.GetSrcTables())
             {
-                Console.WriteLine("Copying table: " + srcTable.CloudTable);
+                string destTableName = settings.AddDateToDestTableName
+                    ? $"{srcTable.TableName}{date:ddMMyyyyHHmm}"
+                    : srcTable.TableName;
 
-                var destTable = settings.DestConnString.GetAzureTable(srcTable.TableName);
+                Console.WriteLine($"Copying table: {srcTable.CloudTable}, destination table: {destTableName}");
+
+                var destTable = settings.DestConnString.GetAzureTable(destTableName);
 
                 var copyPasteEngine = new CopyPasteEngine(srcTable, destTable, settings.SkipBuffer);
 
