@@ -13,7 +13,7 @@ namespace TableStorageMigrator
             foreach (var srcTable in settings.GetSrcTables())
             {
                 string destTableName = settings.AddDateToDestTableName
-                    ? $"{srcTable.TableName}{date:ddMMyyyyHHmm}"
+                    ? $"{srcTable.TableName}{date:yyyyMMddHHmm}"
                     : srcTable.TableName;
 
                 Console.WriteLine($"Copying table: {srcTable.CloudTable}, destination table: {destTableName}");
